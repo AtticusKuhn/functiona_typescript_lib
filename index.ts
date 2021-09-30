@@ -14,7 +14,21 @@ class func<A, B>{
             return f;
         }
     }
+    c<C>(f: functionLike<B, C>): func<A, C> {
+        const ff = wrap(f)
+        //@ts-ignore
+        const composed = (x: A): C => ff.a(this.f(x))
+        return new func(composed)
+    }
 }
+function wrap<A, B>(f: functionLike<A, B>): func<A, B> {
+    if (isFunction(f)) {
+        return new func(f)
+    } else {
+        return f
+    }
+}
+type functionLike<A, B> = func<A, B> | ((x: A) => B);
 // type e = Function extends Function;
 //@ts-ignore
 type Example1<X> = X extends Function ? func<Parameters<X>[0], ReturnType<X>> : X;
@@ -26,9 +40,13 @@ const eq = feq<number>()
 const a = eq.a(1).a(1);
 const c = eq.a(1);
 console.log("a", a, "c", c)
-const inc = () => new func<number, number>((a: number) => a + 1)
-const b = inc().a(1)
+const finc = () => new func<number, number>((a: number) => a + 1)
+const inc = finc()
+const b = inc.a(1)
+const plus_three = inc.c(inc)
+const six = plus_three.a(3)
 console.log("b", b)
+console.log("plus_three", six)
 
 // export const eq = <T>(a: T) => (b: T) => a === b;
 export const neq = <T>(a: T) => (b: T) => a !== b;
