@@ -3,10 +3,8 @@ class func<A, B>{
 
     }
     a(a: A): Example1<typeof f> {//B | func<Parameters<B & Function>[0], ReturnType<B & Function>> {
-        // const tf = this.f;
         const f = this.f(a);
         if (isFunction(f)) {
-            // type x = Example1<typeof f>
             //@ts-ignore
             return new func<Parameters<typeof f>[0], ReturnType<typeof f>>(f);
         } else {
@@ -28,6 +26,9 @@ function wrap<A, B>(f: functionLike<A, B>): func<A, B> {
         return f
     }
 }
+interface func<A, B> {
+    (name: A): B
+}
 type functionLike<A, B> = func<A, B> | ((x: A) => B);
 // type e = Function extends Function;
 //@ts-ignore
@@ -44,9 +45,11 @@ const finc = () => new func<number, number>((a: number) => a + 1)
 const inc = finc()
 const b = inc.a(1)
 const plus_three = inc.c(inc)
+const test = inc(1)
 const six = plus_three.a(3)
 console.log("b", b)
 console.log("plus_three", six)
+console.log("test", test)
 
 // export const eq = <T>(a: T) => (b: T) => a === b;
 export const neq = <T>(a: T) => (b: T) => a !== b;
