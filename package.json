@@ -1,0 +1,16 @@
+{
+  "name": "functional_ts",
+  "version": "1.0.0",
+  "description": "a functional paradigm like haskell with OOP",
+  "main": "index.js",
+  "author": "euler",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3"
+  },
+  "scripts": {
+    "run": "ts-node index.ts"
+  }
+}
