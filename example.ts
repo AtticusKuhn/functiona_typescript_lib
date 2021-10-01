@@ -1,9 +1,9 @@
-import { add, count, eq, foldl, get, inc, isEven, map, on, range, seq, show, zipWith } from "./index"
+import { add, count, eq, foldl, get, inc, isEven, LinkedList, map, on, range, seq, show, zipWith } from "./index"
 
 
 // example 1:  make a function to test if 2 objects have the same "name" attribute
-const sameName = on<{ name: string }, string, boolean>().a(eq<string>()).a(get("name"))
-const test = sameName.a({ name: "alice" }).a({ name: "alice" })
+const sameName = on<{ name: string, [x: string]: any }, string, boolean>().a(eq<string>()).a(get("name"))
+const test = sameName.a({ name: "alice", age: 2 }).a({ name: "alice", age: 30 })
 console.log("do the 2 objects have the same name?", test) // true
 
 //example 2: increase a number then turn it to a string
@@ -24,10 +24,14 @@ const addLists = zipWith<number, number, number>().a(add)
 console.log("adding 2 lists", addLists.a(range.a(10).a(20)).a(seq(5))) // [ 10, 12, 14, 16, 18 ]
 
 // example 7: sum a list
-const sumList = seq.c(foldl<number, number>().a(add).a(0))
+const sumList = foldl<number, number>().a(add).a(0).bc(seq)
 console.log("sum of all numbers from 0 to 99 = ", sumList.a(100)) // 4950
 
 // example 8: get number of occuerances in a list
 const numList = [1, 2, 3, 5, 1, 2, 3, 4, 2, 1, 2, 3, 3, 2, 1, 3, 4, 2]
-const count2s = count<number>().a(eq<number>().a(2))
-console.log("number of 2s in the list is", count2s(numList))
+const count2s = eq<number>().a(2).ba(count<number>())
+console.log("number of 2s in the list is", count2s(numList)) // 6
+
+//
+const ll = new LinkedList([1, 2, 3])
+

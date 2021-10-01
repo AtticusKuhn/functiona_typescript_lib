@@ -26,13 +26,40 @@ export class func<A, B> extends ExtensibleFunction<A, B>/* Function*/ {
             return f;
         }
     };
-    //
+    ba<C>(f: func<func<A, B>, C>): C {
+        return f(this)
+    }
     c<C>(f: functionLike<B, C>): func<A, C> {
         return new func<A, C>(compose<A, B, C>(this.f)(wrap(f).f))
     }
     bc<C>(f: functionLike<C, A>): func<C, B> {
         return new func<C, B>(compose<C, A, B>(wrap(f).f)(this.f))
     }
+}
+export class Monad<A> {
+    constructor(public x: A) { }
+    rtrn(x: A): Monad<A> { return new Monad<A>(x) }
+    Mbind<B>(f: func<A, Monad<B>>) { return f.a(this.x) }
+}
+export class Functor<T> {
+    constructor(public x: T) { }
+    i<B>(f: func<T, B>) { return new Functor(f.a(this.x)) }
+}
+export class LinkedList<T> extends Array implements Monad<T>, Functor<T> {
+    x: T;
+    constructor(public xs: T[]) {
+        super(xs.length)
+        this.x = xs[0]
+    }
+    rtrn(a: T): Monad<T> {
+        //@ts-ignore
+        return [a]
+    }
+    //@ts-ignore
+    i<B>(f: func<T, B>) { return this.xs.map(f.f) }
+    Mbind<B>(f: func<T, Monad<B>>): Monad<B> { return f.a(this.xs[0]); }
+    head(): T { return this.xs[0] }
+    tail(): T[] { return this.xs.slice(1) }
 }
 function wrap<A, B>(f: functionLike<A, B>): func<A, B> {
     if (isFunction(f)) {
@@ -51,11 +78,8 @@ function isFunction(f: any): f is Function {
 }
 const compose = <A, B, C>(f: (x: A) => B) => (g: (y: B) => C): (t: A) => C => (z) => g(f(z));
 export const eq = <T>() => new func<T, (x: T) => boolean>((a: T) => (b: T) => a === b)
-// export const eq = feq<number>()
-
 export const inc = new func<number, number>((a: number) => a + 1)
 export const add = wrap((a: number) => (b: number) => a + b)
-
 export const not = wrap((x: boolean) => !x)
 export const neq = <T>() => new func<T, (x: T) => boolean>((a: T) => (b: T) => a !== b)
 export const on = <A, B, C>() => new func((f: functionLike<B, functionLike<B, C>>) => (g: (a: A) => B) => (a2: A) => (a3: A): C => {
