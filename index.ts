@@ -30,6 +30,9 @@ export class func<A, B> extends ExtensibleFunction<A, B>/* Function*/ {
     c<C>(f: functionLike<B, C>): func<A, C> {
         return new func<A, C>(compose<A, B, C>(this.f)(wrap(f).f))
     }
+    bc<C>(f: functionLike<C, A>): func<C, B> {
+        return new func<C, B>(compose<C, A, B>(wrap(f).f)(this.f))
+    }
 }
 function wrap<A, B>(f: functionLike<A, B>): func<A, B> {
     if (isFunction(f)) {
@@ -55,7 +58,10 @@ export const add = wrap((a: number) => (b: number) => a + b)
 
 export const not = wrap((x: boolean) => !x)
 export const neq = <T>() => new func<T, (x: T) => boolean>((a: T) => (b: T) => a !== b)
-export const on = <A, B, C>() => new func((f: (b1: B) => (b2: B) => C) => (g: (a: A) => B) => (a2: A) => (a3: A): C => f(g(a2))(g(a3)))
+export const on = <A, B, C>() => new func((f: functionLike<B, functionLike<B, C>>) => (g: (a: A) => B) => (a2: A) => (a3: A): C => {
+    const cf = compose(extract)(extract)(f) as (a: B) => (b: B) => C;
+    return cf(g(a2))(g(a3));
+});
 const fget = <B extends { [x: string]: any }>(s: keyof B) => (x: B) => x[s];
 export const get = wrap<string, (x: { [x: string]: {}; }) => {}>(fget)
 export const map = <A, B>() => wrap((f: functionLike<A, B>) => (xs: A[]): B[] => xs.map(extract(f)))
@@ -68,15 +74,28 @@ export const count = <A>() => wrap((f: functionLike<A, boolean>) => (xs: A[]): n
     return i
 });
 export const zipWith = <A, B, C>() => wrap(
-    (f: (a: A) => (b: B) => C) => (xs1: A[]) => (xs2: B[]) => {
+    (f: functionLike<A, functionLike<B, C>>) => (xs1: A[]) => (xs2: B[]) => {
+        const cf = compose(extract)(extract)(f) as (a: A) => (b: B) => C
         let xs = []
         while (xs1.length > 0 && xs2.length > 0) {
-            xs.push(f(xs1[0])(xs2[0]))
+            xs.push(cf(xs1[0])(xs2[0]))
             xs1 = xs1.slice(1)
             xs2 = xs2.slice(1)
         }
         return xs
     })
+export const foldl = <A, B>() => wrap((f1: functionLike<A, functionLike<B, B>>) => (b: B) => (as: A[]): B => {
+    const cf = compose(extract)(extract)(f1) as (a: A) => (b: B) => B
+    for (let i = 0; i < as.length; i++)
+        b = cf(as[i])(b)
+    return b;
+})
+export const foldr = <A, B>() => wrap((f1: functionLike<A, functionLike<B, B>>) => (b: B) => (as: A[]): B => {
+    const cf = compose(extract)(extract)(f1) as (a: A) => (b: B) => B
+    for (let i = as.length - 1; i > 0; i--)
+        b = cf(as[i])(b)
+    return b;
+})
 export const isEven = wrap((x: number) => x % 2 === 0)
 export const show = wrap(JSON.stringify)
 export const seq = wrap((end: number) => new Array(end).fill(0).map((_e, i) => i))
