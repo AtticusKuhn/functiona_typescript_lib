@@ -32,3 +32,12 @@ console.log("adding 2 lists", addLists.a(range.a(10).a(20)).a(seq(5))) // [ 10, 
 const sumList = seq.c(foldl<number, number>().a(add).a(0))
 console.log("sum of all numbers from 0 to 99 = ", sumList.a(100)) // 4950
 ```
+# Purpose
+The purpose of the library is to have functional design that uses object-oriented and
+class-based syntax in order to introduce object-oriented programmers to try functional
+programming.
+# Methods
+The `func` class is the central class of this library, and it has some methods
+- a: apply, like the `$` operator in haskell
+- c: compose, like the `.` operator in haskell
+- bc: backwards compose, like compose but with the order reversed. 
