@@ -51,6 +51,7 @@ export const eq = <T>() => new func<T, (x: T) => boolean>((a: T) => (b: T) => a 
 // export const eq = feq<number>()
 
 export const inc = new func<number, number>((a: number) => a + 1)
+export const add = wrap((a: number) => (b: number) => a + b)
 
 export const not = wrap((x: boolean) => !x)
 export const neq = <T>() => new func<T, (x: T) => boolean>((a: T) => (b: T) => a !== b)
@@ -58,8 +59,25 @@ export const on = <A, B, C>() => new func((f: (b1: B) => (b2: B) => C) => (g: (a
 const fget = <B extends { [x: string]: any }>(s: keyof B) => (x: B) => x[s];
 export const get = wrap<string, (x: { [x: string]: {}; }) => {}>(fget)
 export const map = <A, B>() => wrap((f: functionLike<A, B>) => (xs: A[]): B[] => xs.map(extract(f)))
+export const filter = <A>() => wrap((f: functionLike<A, boolean>) => (xs: A[]): A[] => xs.filter(extract(f)))
+export const count = <A>() => wrap((f: functionLike<A, boolean>) => (xs: A[]): number => {
+    let i = 0
+    for (const x of xs)
+        if (extract(f)(x))
+            i++
+    return i
+});
+export const zipWith = <A, B, C>() => wrap(
+    (f: (a: A) => (b: B) => C) => (xs1: A[]) => (xs2: B[]) => {
+        let xs = []
+        while (xs1.length > 0 && xs2.length > 0) {
+            xs.push(f(xs1[0])(xs2[0]))
+            xs1 = xs1.slice(1)
+            xs2 = xs2.slice(1)
+        }
+        return xs
+    })
+export const isEven = wrap((x: number) => x % 2 === 0)
 export const show = wrap(JSON.stringify)
 export const seq = wrap((end: number) => new Array(end).fill(0).map((_e, i) => i))
 export const range = wrap((start: number) => (end: number) => new Array(end - start).fill(0).map((_e, i) => i + start))
-
-//x => x.name !== equpping.name
