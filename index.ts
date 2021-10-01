@@ -5,16 +5,10 @@ class ExtensibleFunction<A, B> extends Function {
     }
 }
 
-
-
 export class func<A, B> extends ExtensibleFunction<A, B>/* Function*/ {
     __self__: this;
     constructor(public f: (x: A) => B) {
-        // super("return " + JSON.stringify(f) + ";");
         super(f)
-        // const self = this.bind(this)
-        // this.__self__ = self
-        // return self
     }
     __call__(a: A): B {
         return this.f(a)
@@ -32,11 +26,9 @@ export class func<A, B> extends ExtensibleFunction<A, B>/* Function*/ {
             return f;
         }
     };
+    //
     c<C>(f: functionLike<B, C>): func<A, C> {
-        const ff = wrap(f)
-        //@ts-ignore
-        const composed = (x: A): C => ff.a(this.f(x))
-        return new func(composed)
+        return new func<A, C>(compose<A, B, C>(this.f)(wrap(f).f))
     }
 }
 function wrap<A, B>(f: functionLike<A, B>): func<A, B> {
@@ -47,12 +39,14 @@ function wrap<A, B>(f: functionLike<A, B>): func<A, B> {
         return f
     }
 }
+const extract = <A, B>(f: functionLike<A, B>): (x: A) => B => wrap(f).f;
 type functionLike<A, B> = func<A, B> | ((x: A) => B);
 //@ts-ignore
 type Example1<X> = X extends Function ? func<Parameters<X>[0], ReturnType<X>> : X;
 function isFunction(f: any): f is Function {
     return typeof f === "function"
 }
+const compose = <A, B, C>(f: (x: A) => B) => (g: (y: B) => C): (t: A) => C => (z) => g(f(z));
 export const eq = <T>() => new func<T, (x: T) => boolean>((a: T) => (b: T) => a === b)
 // export const eq = feq<number>()
 
@@ -63,4 +57,9 @@ export const neq = <T>() => new func<T, (x: T) => boolean>((a: T) => (b: T) => a
 export const on = <A, B, C>() => new func((f: (b1: B) => (b2: B) => C) => (g: (a: A) => B) => (a2: A) => (a3: A): C => f(g(a2))(g(a3)))
 const fget = <B extends { [x: string]: any }>(s: keyof B) => (x: B) => x[s];
 export const get = wrap<string, (x: { [x: string]: {}; }) => {}>(fget)
+export const map = <A, B>() => wrap((f: functionLike<A, B>) => (xs: A[]): B[] => xs.map(extract(f)))
+export const show = wrap(JSON.stringify)
+export const seq = wrap((end: number) => new Array(end).fill(0).map((_e, i) => i))
+export const range = wrap((start: number) => (end: number) => new Array(end - start).fill(0).map((_e, i) => i + start))
+
 //x => x.name !== equpping.name
