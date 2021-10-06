@@ -43,7 +43,8 @@ export class Monad<A> {
 }
 export class Functor<T> {
     constructor(public x: T) { }
-    i<B>(f: func<T, B>) { return new Functor(f.a(this.x)) }
+    //@ts-ignore
+    i<B>(f: func<T, B>): Functor<B> { return new Functor(f.a(this.x)) }
 }
 export class LinkedList<T> extends Array implements Monad<T>, Functor<T> {
     x: T;
@@ -55,8 +56,7 @@ export class LinkedList<T> extends Array implements Monad<T>, Functor<T> {
         //@ts-ignore
         return [a]
     }
-    //@ts-ignore
-    i<B>(f: func<T, B>) { return this.xs.map(f.f) }
+    i<B>(f: func<T, B>): LinkedList<B> { return new LinkedList(this.xs.map(f.f)) }
     Mbind<B>(f: func<T, Monad<B>>): Monad<B> { return f.a(this.xs[0]); }
     head(): T { return this.xs[0] }
     tail(): T[] { return this.xs.slice(1) }
@@ -78,6 +78,9 @@ function isFunction(f: any): f is Function {
 }
 const compose = <A, B, C>(f: (x: A) => B) => (g: (y: B) => C): (t: A) => C => (z) => g(f(z));
 export const eq = <T>() => new func<T, (x: T) => boolean>((a: T) => (b: T) => a === b)
+export const gt = wrap((x: number) => (y: number) => x > y)
+export const lt = wrap((x: number) => (y: number) => x < y)
+
 export const inc = new func<number, number>((a: number) => a + 1)
 export const add = wrap((a: number) => (b: number) => a + b)
 export const not = wrap((x: boolean) => !x)
@@ -122,5 +125,25 @@ export const foldr = <A, B>() => wrap((f1: functionLike<A, functionLike<B, B>>) 
 })
 export const isEven = wrap((x: number) => x % 2 === 0)
 export const show = wrap(JSON.stringify)
-export const seq = wrap((end: number) => new Array(end).fill(0).map((_e, i) => i))
-export const range = wrap((start: number) => (end: number) => new Array(end - start).fill(0).map((_e, i) => i + start))
+export const seq = wrap((end: number) => new LinkedList(new Array(end).fill(0).map((_e, i) => i)))
+export const range = wrap((start: number) => (end: number) => new LinkedList(new Array(end - start).fill(0).map((_e, i) => i + start)))
+export const i = <T, X>() => wrap((f: func<T, X>) => (x: Functor<T>): Functor<X> => x.i(f))
+export const rtrn = <T>() => wrap((x: T): Monad<T> => new Monad<T>(x))
+export const forLoop = <T, B>() => wrap((inital: T) => (done: functionLike<T, boolean>) => (step: functionLike<T, T>) => (transform: functionLike<T, B>): LinkedList<B> => {
+    const d: (x: T) => boolean = extract(done);
+    const s = extract(step)
+    const t = extract(transform)
+    let stack: LinkedList<B> = new LinkedList([])
+    for (let i = inital; d(i); i = s(i)) {
+        stack.push(t(i))
+    }
+    return stack;
+})
+export const sequence = <T>() => wrap((inital: number) => (done: functionLike<number, boolean>) => (transform: functionLike<number, T>) => forLoop<number, T>().a(inital).a(done).a(inc).a(transform))
+export const sumList = foldl<number, number>().a(add).a(0)
+export const sigmaSum = sumList.c(sequence<number>())
+export const power = wrap((x: number) => (y: number) => x ** y)
+export const flip = <A, B, C>() => wrap((f: functionLike<A, functionLike<B, C>>): func<B, func<A, C>> => {
+    const ff = extract(f)
+    return wrap((B: B) => wrap((A: A): C => extract(ff(A))(B)))
+})

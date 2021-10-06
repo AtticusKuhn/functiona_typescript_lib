@@ -1,4 +1,4 @@
-import { add, count, eq, foldl, get, inc, isEven, LinkedList, map, on, range, seq, show, zipWith } from "./index"
+import { add, count, eq, foldl, get, gt, inc, isEven, map, on, power, range, seq, sequence, show, zipWith } from "./index"
 
 
 // example 1:  make a function to test if 2 objects have the same "name" attribute
@@ -13,7 +13,7 @@ console.log("incrementThenString(2) = ", incrementThenString(2)) // "3"
 //example 3: increase every element of a list
 const incrementList = map<number, number>().a(inc)
 const list = incrementList.a(seq.a(10))
-console.log("mapped sequence is", list) // [ 1, 2, 3, 4, 5,6, 7, 8, 9, 10 ]
+console.log("mapped sequence is", show.a(list)) // [ 1, 2, 3, 4, 5,6, 7, 8, 9, 10 ]
 
 // example 4: how many even numbers are less than 100?
 const counter = count<number>().a(isEven).bc(seq)
@@ -32,6 +32,6 @@ const numList = [1, 2, 3, 5, 1, 2, 3, 4, 2, 1, 2, 3, 3, 2, 1, 3, 4, 2]
 const count2s = eq<number>().a(2).ba(count<number>())
 console.log("number of 2s in the list is", count2s(numList)) // 6
 
-//
-const ll = new LinkedList([1, 2, 3])
-
+// example 9: get squares from 1 to 100
+const powers = sequence<number>().a(0).a(gt.a(10)).a(power.a(2))
+console.log("powers of 2 from 1 to 10", show.a(powers))
